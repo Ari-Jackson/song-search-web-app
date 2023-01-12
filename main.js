@@ -5,11 +5,11 @@ const textInput = document.querySelector(".js-input-field");
 const radioOptions = document.querySelectorAll(".js-radio");
 const form = document.querySelector(".js-form");
 const mainHeading = document.querySelector(".js-main-heading");
+const dialog = document.querySelector(".js-modal");
 
 /* <------------------------- Event Listeners------------------------->*/
 document.addEventListener("DOMContentLoaded", renderTenNewReleases);
 searchBtn.addEventListener("click", renderSearchResuls);
-
 /* <------------------------- Functions ------------------------->*/
 //Seach button functions
 async function renderSearchResuls(e) {
@@ -22,28 +22,18 @@ async function renderSearchResuls(e) {
 
   mainHeading.textContent = "Search Results";
 
+
   searchResults[Object.keys(searchResults)[0]].items.forEach(renderResult);
 }
 
 async function returnTenSearchResults() {
-  const endpoint = "https://api.spotify.com/v1/search?";
   const q = textInput.value.replace(/\s/g, "%20");
   const type = Array.from(radioOptions).find((option) => option.checked).value;
-  const token = await getToken();
 
-  const myHeaders = new Headers([
-    ["Accept", "application/json"],
-    ["Content-Type", "application/json"],
-    ["Authorization", "Bearer " + token.access_token],
-  ]);
-
-  const requestOptions = {
-    method: "GET",
-    headers: myHeaders,
-  };
+  const requestOptions = await createRequestOptions();
 
   let rawResult = await fetch(
-    `${endpoint}q=${q}&type=${type}&limit=10`,
+    `https://api.spotify.com/v1/search?q=${q}&type=${type}&limit=10`,
     requestOptions
   );
 
@@ -52,7 +42,15 @@ async function returnTenSearchResults() {
   return jsonResult;
 }
 
-const renderResult = (result) => {
+//On Load Functions
+async function renderTenNewReleases() {
+  let topTen = await fetchTopTen();
+  console.log(topTen);
+
+  topTen.albums.items.forEach(renderResult);
+}
+
+function renderResult(result) {
   const h4 = document.createElement("h4");
   h4.textContent = result.name;
 
@@ -70,33 +68,15 @@ const renderResult = (result) => {
 
   const div = document.createElement("div");
   div.setAttribute("class", "card");
+  div.setAttribute("id", result.id);
   div.append(img, h4, p);
+  //   div.addEventListener("click", showSongOrAlbumModal)
+
   mainArticle.append(div);
-};
-
-//On Load Functions
-
-async function renderTenNewReleases() {
-  let tokenInfo = await getToken();
-  let topTen = await getTopTen(tokenInfo);
-
-  console.log(topTen.albums.items);
-
-  topTen.albums.items.forEach(renderResult);
 }
 
-async function getTopTen(tokenInfo) {
-  const myHeaders = new Headers([
-    ["Accept", "application/json"],
-    ["Content-Type", "application/json"],
-    ["Authorization", "Bearer " + tokenInfo.access_token],
-  ]);
-
-  const requestOptions = {
-    method: "GET",
-    headers: myHeaders,
-    redirect: "manual",
-  };
+async function fetchTopTen() {
+  let requestOptions = await createRequestOptions();
 
   let topTenRaw = await fetch(
     "https://api.spotify.com/v1/browse/new-releases?limit=10&country=US",
@@ -106,6 +86,21 @@ async function getTopTen(tokenInfo) {
   let topTen = await topTenRaw.json();
 
   return topTen;
+}
+
+async function createRequestOptions() {
+  const tokenInfo = await getToken();
+
+  const myHeaders = new Headers([
+    ["Accept", "application/json"],
+    ["Content-Type", "application/json"],
+    ["Authorization", "Bearer " + tokenInfo],
+  ]);
+
+  return {
+    method: "GET",
+    headers: myHeaders,
+  };
 }
 
 async function getToken() {
@@ -132,5 +127,5 @@ async function getToken() {
 
   let jsonResult = await result.json();
 
-  return jsonResult;
+  return jsonResult.access_token;
 }
