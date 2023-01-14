@@ -108,11 +108,10 @@ async function renderSearchResults(e) {
 
   const searchResults = await returnTenSearchResults();
 
+  mainHeading.textContent = `Search Results for "${textInput.value.trim()}"`;
+
   textInput.value = "";
   mainArticle.innerHTML = "";
-
-  mainHeading.textContent = "Search Results";
-
 
   searchResults[Object.keys(searchResults)[0]].items.forEach(renderResult);
 }
