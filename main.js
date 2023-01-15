@@ -17,11 +17,9 @@ document.addEventListener("DOMContentLoaded", renderTenNewReleases);
 //on search
 searchBtn.addEventListener("click", renderSearchResults);
 
-//open modal on line 167
-
+//open modal inside renderResult
 //close modal
 closeModal.addEventListener("click", () => dialog.close());
-dialog.addEventListener("close", () => modalPlay.removeAttribute("id"));
 
 /* <------------------------- Functions ------------------------->*/
 //Dialog Functions
@@ -30,61 +28,91 @@ async function showSongOrAlbumModal(e) {
 
   const result = await fetchSingleResult(e);
 
-  renderModalImg(result);
   renderResultModal(result);
 
   dialog.showModal();
 }
 
-function renderModalImg(result) {
-  
+function createImg(result) {
   const img = document.createElement("img");
   img.setAttribute(
     "src",
-    result.type == "track" ? result.album.images[1].url : result.images[1].url
+    result.hasOwnProperty("images")
+      ? result.images[1].url
+      : result.album.images[1].url
   );
   img.setAttribute("class", "album-cover");
 
-  dialogMain.append(img);
+  return img
 }
 
-function renderResultModal(result) {
-  console.log(result);
-  // heading
-
+function createArtistAndReleased(result, appendTo){
   const name = document.createElement("h4");
   name.textContent = `${result.name}`;
+  
+  const albumType = document.createElement("h5");
+  albumType.textContent = result.hasOwnProperty("album") ? album.album_type : "Album";
 
-  //main content
   const artist = document.createElement("p");
   artist.innerHTML = `<strong>Artists: </strong> ${result.artists
     .map((artist) => artist.name)
     .join(", ")}`;
 
-  //just for albums
-  const albumType = document.createElement("h5");
-  albumType.textContent = result.album_type == "single" ? "Single" : "Album";
+  const albumInfo = result.hasOwnProperty("album") ? result.album : result;  
 
   const released = document.createElement("p");
   released.innerHTML = `<strong>Realease Date: </strong> ${new Date(
-    result.release_date
+    albumInfo.release_date
   ).toLocaleDateString("en-us", {
     year: "numeric",
     month: "short",
     day: "numeric",
   })}`;
+  
+    appendTo.append(name, albumType, artist, released)
+}
 
-  const recordingLabel = document.createElement("p");
-  recordingLabel.innerHTML = `<strong>Record Label: </strong> ${result.label}`;
-
-  const copyright = document.createElement("p");
-  copyright.textContent = `${result.copyrights[0].text}`;
-
-  //append
+function renderResultModal(result) {
   const div = document.createElement("div");
-  div.append(name, albumType, artist, released, recordingLabel, copyright);
 
-  dialogMain.append(div);
+  createArtistAndReleased(result, div) 
+ 
+  if(!result.hasOwnProperty("album")){
+    const recordingLabel = document.createElement("p");
+    recordingLabel.innerHTML = `<strong>Record Label: </strong> ${result.label}`;
+    
+    const copyright = document.createElement("p");
+    copyright.textContent = `${result.hasOwnProperty("copyrights") ? result.copyrights[0].text : "Copyright Unavailable"}`;
+    
+    div.append(recordingLabel, copyright);
+    
+  } else {
+    //duration
+    let minute = Math.floor(result.duration_ms/1000 / 60);
+    let second = Math.ceil(result.duration_ms/1000 % 60);
+    
+    const duration = document.createElement("p");
+    
+    duration.innerHTML = `<strong>Duration: </strong> ${minute}:${second.toString().padStart(2, "0")}`;
+  
+    //Explicit
+    const explicit = document.createElement("p");
+    explicit.textContent = `${result.explicit ? "Explicit" : "Clean"}`;
+
+    div.append(duration, explicit)
+  
+    //track #
+    if(result.album.album_type !== "single"){
+      const trackNumber = document.createElement("p");
+      
+      trackNumber.innerHTML = `<strong>Track Number: </strong> ${result.track_number} of ${result.album.total_tracks}`
+
+      div.append(trackNumber)
+    }
+  }
+    
+  const img = createImg(result)
+  dialogMain.append(img, div);
 }
 
 async function fetchSingleResult(e) {
@@ -106,6 +134,11 @@ async function fetchSingleResult(e) {
 async function renderSearchResults(e) {
   e.preventDefault();
 
+  if(textInput.value == "" || !Array.from(radioOptions).find((option) => option.checked)){
+    console.log("This will be for errors")
+    return ""
+  }
+
   const searchResults = await returnTenSearchResults();
 
   mainHeading.textContent = `Search Results for "${textInput.value.trim()}"`;
@@ -119,13 +152,11 @@ async function renderSearchResults(e) {
 async function returnTenSearchResults() {
   const q = textInput.value.replace(/\s/g, "%20");
   const type = Array.from(radioOptions).find((option) => option.checked).value;
+  const endpoint = `https://api.spotify.com/v1/search?q=${q}&type=${type}&limit=10`
 
   const requestOptions = await createRequestOptions();
 
-  let rawResult = await fetch(
-    `https://api.spotify.com/v1/search?q=${q}&type=${type}&limit=10`,
-    requestOptions
-  );
+  let rawResult = await fetch(endpoint,requestOptions);
 
   let jsonResult = await rawResult.json();
 
@@ -142,14 +173,7 @@ function renderResult(result) {
   const h4 = document.createElement("h4");
   h4.textContent = result.name;
 
-  const img = document.createElement("img");
-  img.setAttribute(
-    "src",
-    result.hasOwnProperty("images")
-      ? result.images[1].url
-      : result.album.images[1].url
-  );
-  img.setAttribute("class", "album-cover");
+  const img = createImg(result)
 
   const p = document.createElement("p");
   p.textContent = result.artists[0].name;
