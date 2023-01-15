@@ -135,9 +135,12 @@ async function fetchSingleResult(e) {
 async function renderSearchResults(e) {
   e.preventDefault();
 
-  if(textInput.value == "" || !Array.from(radioOptions).find((option) => option.checked)){
-    console.log("This will be for errors")
-    return ""
+  if (
+    textInput.value == "" ||
+    !Array.from(radioOptions).find((option) => option.checked)
+  ) {
+    console.log("This will be for errors");
+    return "";
   }
 
   const searchResults = await returnTenSearchResults();
