@@ -53,6 +53,7 @@ function createArtistAndReleased(result, appendTo){
   const albumType = document.createElement("h5");
   albumType.textContent = result.hasOwnProperty("album") ? album.album_type : "Album";
 
+  //main content
   const artist = document.createElement("p");
   artist.innerHTML = `<strong>Artists: </strong> ${result.artists
     .map((artist) => artist.name)
