@@ -30,22 +30,24 @@ async function showSongOrAlbumModal(e) {
 
   const result = await fetchSingleResult(e);
 
-  renderModalImg(result);
+  renderImg(result, dialogMain);
   renderResultModal(result);
 
   dialog.showModal();
 }
 
-function renderModalImg(result) {
+function renderImg(result) {
   
   const img = document.createElement("img");
   img.setAttribute(
     "src",
-    result.type == "track" ? result.album.images[1].url : result.images[1].url
+    result.hasOwnProperty("images")
+      ? result.images[1].url
+      : result.album.images[1].url
   );
   img.setAttribute("class", "album-cover");
 
-  dialogMain.append(img);
+  return img
 }
 
 function renderResultModal(result) {
@@ -56,6 +58,8 @@ function renderResultModal(result) {
   name.textContent = `${result.name}`;
 
   //main content
+  const img = renderImg()
+
   const artist = document.createElement("p");
   artist.innerHTML = `<strong>Artists: </strong> ${result.artists
     .map((artist) => artist.name)
@@ -84,7 +88,7 @@ function renderResultModal(result) {
   const div = document.createElement("div");
   div.append(name, albumType, artist, released, recordingLabel, copyright);
 
-  dialogMain.append(div);
+  dialogMain.append(img, div);
 }
 
 async function fetchSingleResult(e) {
@@ -142,14 +146,7 @@ function renderResult(result) {
   const h4 = document.createElement("h4");
   h4.textContent = result.name;
 
-  const img = document.createElement("img");
-  img.setAttribute(
-    "src",
-    result.hasOwnProperty("images")
-      ? result.images[1].url
-      : result.album.images[1].url
-  );
-  img.setAttribute("class", "album-cover");
+  renderImg(result)
 
   const p = document.createElement("p");
   p.textContent = result.artists[0].name;
