@@ -13,7 +13,7 @@ const closeModal = document.querySelector(".js-x-button");
 
 /* <------------------------- Event Listeners------------------------->*/
 //on load
-document.addEventListener("DOMContentLoaded", renderTenNewReleases);
+document.addEventListener("DOMContentLoaded", renderNewReleases);
 //on search
 searchBtn.addEventListener("click", renderSearchResults);
 
@@ -46,7 +46,7 @@ function createImg(result) {
   return img
 }
 
-function createArtistAndReleased(result, appendTo){
+function createAllResultInfo(result, appendTo) {
   const name = document.createElement("h4");
   name.textContent = `${result.name}`;
   
@@ -76,8 +76,8 @@ function createArtistAndReleased(result, appendTo){
 function renderResultModal(result) {
   const div = document.createElement("div");
 
-  createArtistAndReleased(result, div) 
- 
+  createAllResultInfo(result, div);
+
   if(!result.hasOwnProperty("album")){
     const recordingLabel = document.createElement("p");
     recordingLabel.innerHTML = `<strong>Record Label: </strong> ${result.label}`;
@@ -140,7 +140,7 @@ async function renderSearchResults(e) {
     return ""
   }
 
-  const searchResults = await returnTenSearchResults();
+  const searchResults = await returnTwelveSearchResults();
 
   mainHeading.textContent = `Search Results for "${textInput.value.trim()}"`;
 
@@ -150,10 +150,10 @@ async function renderSearchResults(e) {
   searchResults[Object.keys(searchResults)[0]].items.forEach(renderResult);
 }
 
-async function returnTenSearchResults() {
+async function returnTwelveSearchResults() {
   const q = textInput.value.replace(/\s/g, "%20");
   const type = Array.from(radioOptions).find((option) => option.checked).value;
-  const endpoint = `https://api.spotify.com/v1/search?q=${q}&type=${type}&limit=10`
+  const endpoint = `https://api.spotify.com/v1/search?q=${q}&type=${type}&limit=12`
 
   const requestOptions = await createRequestOptions();
 
@@ -165,9 +165,9 @@ async function returnTenSearchResults() {
 }
 
 //On Load Functions
-async function renderTenNewReleases() {
-  let topTen = await fetchTopTen();
-  topTen.albums.items.forEach(renderResult);
+async function renderNewReleases() {
+  let newReleases = await fetchNewReleases();
+  newReleases.albums.items.forEach(renderResult);
 }
 
 function renderResult(result) {
@@ -189,17 +189,17 @@ function renderResult(result) {
   mainArticle.append(div);
 }
 
-async function fetchTopTen() {
+async function fetchNewReleases() {
   let requestOptions = await createRequestOptions();
 
-  let topTenRaw = await fetch(
-    "https://api.spotify.com/v1/browse/new-releases?limit=10&country=US",
+  let newReleasesRaw = await fetch(
+    "https://api.spotify.com/v1/browse/new-releases?limit=12&country=US",
     requestOptions
   );
 
-  let topTen = await topTenRaw.json();
+  let newReleases = await newReleasesRaw.json();
 
-  return topTen;
+  return newReleases;
 }
 
 async function createRequestOptions() {
