@@ -22,7 +22,7 @@ searchBtn.addEventListener("click", renderSearchResults);
 closeModal.addEventListener("click", () => dialog.close());
 
 /* <------------------------- Functions ------------------------->*/
-//Dialog Functions
+//Modal Functions
 async function showSongOrAlbumModal(e) {
   dialogMain.innerHTML = "";
 
@@ -43,15 +43,17 @@ function createImg(result) {
   );
   img.setAttribute("class", "album-cover");
 
-  return img
+  return img;
 }
 
 function createAllResultInfo(result, appendTo) {
   const name = document.createElement("h4");
   name.textContent = `${result.name}`;
-  
+
   const albumType = document.createElement("h5");
-  albumType.textContent = result.hasOwnProperty("album") ? album.album_type : "Album";
+  albumType.textContent = result.hasOwnProperty("album")
+    ? album.album_type
+    : "Album";
 
   //main content
   const artist = document.createElement("p");
@@ -59,7 +61,7 @@ function createAllResultInfo(result, appendTo) {
     .map((artist) => artist.name)
     .join(", ")}`;
 
-  const albumInfo = result.hasOwnProperty("album") ? result.album : result;  
+  const albumInfo = result.hasOwnProperty("album") ? result.album : result;
 
   const released = document.createElement("p");
   released.innerHTML = `<strong>Realease Date: </strong> ${new Date(
@@ -69,8 +71,8 @@ function createAllResultInfo(result, appendTo) {
     month: "short",
     day: "numeric",
   })}`;
-  
-    appendTo.append(name, albumType, artist, released)
+
+  appendTo.append(name, albumType, artist, released);
 }
 
 function renderResultModal(result) {
@@ -78,41 +80,48 @@ function renderResultModal(result) {
 
   createAllResultInfo(result, div);
 
-  if(!result.hasOwnProperty("album")){
+  if (!result.hasOwnProperty("album")) {
     const recordingLabel = document.createElement("p");
     recordingLabel.innerHTML = `<strong>Record Label: </strong> ${result.label}`;
-    
+
     const copyright = document.createElement("p");
-    copyright.textContent = `${result.hasOwnProperty("copyrights") ? result.copyrights[0].text : "Copyright Unavailable"}`;
-    
+    copyright.textContent = `${
+      result.hasOwnProperty("copyrights")
+        ? result.copyrights[0].text
+        : "Copyright Unavailable"
+    }`;
+
     div.append(recordingLabel, copyright);
-    
   } else {
     //duration
-    let minute = Math.floor(result.duration_ms/1000 / 60);
-    let second = Math.ceil(result.duration_ms/1000 % 60);
-    
+    let minute = Math.floor(result.duration_ms / 1000 / 60);
+    let second = Math.ceil((result.duration_ms / 1000) % 60);
+
     const duration = document.createElement("p");
-    
-    duration.innerHTML = `<strong>Duration: </strong> ${minute}:${second.toString().padStart(2, "0")}`;
-  
+
+    duration.innerHTML = `<strong>Duration: </strong> ${minute}:${second
+      .toString()
+      .padStart(2, "0")}`;
+
     //Explicit
     const explicit = document.createElement("p");
     explicit.textContent = `${result.explicit ? "Explicit" : "Clean"}`;
 
-    div.append(duration, explicit)
-  
-    //track #
-    if(result.album.album_type !== "single"){
-      const trackNumber = document.createElement("p");
-      
-      trackNumber.innerHTML = `<strong>Track Number: </strong> ${result.track_number} of ${result.album.total_tracks}`
+    div.append(duration, explicit);
 
-      div.append(trackNumber)
+    //track #
+    if (result.album.album_type !== "single") {
+      const trackNumber = document.createElement("p");
+
+      trackNumber.innerHTML = `<strong>Track Number: </strong> ${result.track_number} of ${result.album.total_tracks}`;
+
+      div.append(trackNumber);
     }
+    //audioplayer
+    let preview;
+    console.log(result);
   }
-    
-  const img = createImg(result)
+  const img = createImg(result);
   dialogMain.append(img, div);
 }
 
@@ -135,9 +144,23 @@ async function fetchSingleResult(e) {
 async function renderSearchResults(e) {
   e.preventDefault();
 
-  if(textInput.value == "" || !Array.from(radioOptions).find((option) => option.checked)){
-    console.log("This will be for errors")
-    return ""
+  if (textInput.value.trim() == "") {
+    if (!document.querySelector(".js-error")) {
+      // console.log("This will be for errors");
+      errorP = document.createElement("dialog");
+      errorP.textContent =
+        "Oh no! A search must include a song or album to search for.";
+      errorP.setAttribute("class", "js-error error");
+
+      document.querySelector("header").append(errorP);
+      errorP.show();
+      console.log(errorP);
+    }
+    return "";
+  }
+
+  if (document.querySelector(".js-error")) {
+    document.querySelector(".js-error").remove();
   }
 
   const searchResults = await returnTwelveSearchResults();
@@ -158,7 +181,7 @@ async function returnTwelveSearchResults() {
 
   const requestOptions = await createRequestOptions();
 
-  let rawResult = await fetch(endpoint,requestOptions);
+  let rawResult = await fetch(endpoint, requestOptions);
 
   let jsonResult = await rawResult.json();
 
@@ -178,7 +201,7 @@ function renderResult(result) {
   const h4 = document.createElement("h4");
   h4.textContent = result.name;
 
-  const img = createImg(result)
+  const img = createImg(result);
 
   const p = document.createElement("p");
   p.textContent = result.artists[0].name;
