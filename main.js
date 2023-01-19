@@ -141,8 +141,9 @@ async function renderSearchResults(e) {
   }
 
   const searchResults = await returnTwelveSearchResults();
+  const searchType = returnCheckedRadio() == "track" ? "Song" : "Album";
 
-  mainHeading.textContent = `Search Results for "${textInput.value.trim()}"`;
+  mainHeading.textContent = `${searchType} results for "${textInput.value.trim()}"`;
 
   textInput.value = "";
   mainArticle.innerHTML = "";
@@ -152,8 +153,8 @@ async function renderSearchResults(e) {
 
 async function returnTwelveSearchResults() {
   const q = textInput.value.replace(/\s/g, "%20");
-  const type = Array.from(radioOptions).find((option) => option.checked).value;
-  const endpoint = `https://api.spotify.com/v1/search?q=${q}&type=${type}&limit=12`
+  const type = returnCheckedRadio();
+  const endpoint = `https://api.spotify.com/v1/search?q=${q}&type=${type}&limit=12`;
 
   const requestOptions = await createRequestOptions();
 
@@ -163,6 +164,9 @@ async function returnTwelveSearchResults() {
 
   return jsonResult;
 }
+
+returnCheckedRadio = () =>
+  Array.from(radioOptions).find((option) => option.checked).value;
 
 //On Load Functions
 async function renderNewReleases() {
