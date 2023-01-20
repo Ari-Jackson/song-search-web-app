@@ -240,7 +240,7 @@ main article {
 
 :modal p,
 :modal h4{
-    width: 40ch;
+    max-width: 40ch;
     padding: 0.35rem 0
 }
 
